@@ -2,6 +2,8 @@
 
 A portfolio-grade data engineering project that streams synthetic e-commerce events using Redpanda (Kafka-compatible), Python, and PostgreSQL. It includes event validation, idempotent inserts, a dead-letter topic (DLQ), SQL analytics, Docker Compose, and unit tests.
 
+**Project guide:** [Read the project explanation](docs/project-explanation.md) · [Open the PDF guide](docs/real-time-commerce-streaming-pipeline-explanation.pdf)
+
 > Local demo with synthetic data. Run the Docker integration before describing the entire stack as deployment-tested.
 
 ## Architecture
@@ -29,6 +31,8 @@ src/demo.py           # Offline validation demo
 tests/                # Unit tests
 sql/analytics.sql     # Analytics queries
 data/sample_events.jsonl
+docs/project-explanation.md
+docs/real-time-commerce-streaming-pipeline-explanation.pdf
 docker-compose.yml
 Dockerfile
 ```
@@ -69,15 +73,15 @@ The consumer runs continuously in the Compose service. Publish events using:
 docker compose run --rm consumer python -m src.producer --count 100
 ```
 
-Invalid events are sent to `commerce-events-dlq`; valid events are inserted into PostgreSQL. Replayed `event_id` values do not create duplicate rows.
+Invalid events are sent to `commerce-events.dlq`; valid events are inserted into PostgreSQL. Replayed `event_id` values do not create duplicate rows.
 
 ## Event contract
 
-Fields: `event_id`, `event_type`, `event_timestamp`, `order_id`, `customer_id`, `amount`, and `currency`. Supported event types include order created, paid, cancelled, and refunded. Invalid timestamps, missing fields, unsupported event types, and negative amounts are rejected.
+Fields: `event_id`, `event_type`, `event_time`, `user_id`, `session_id`, `product_id`, `category`, `quantity`, and `unit_price`. Supported event types include view, add-to-cart, checkout, and purchase. Invalid timestamps, missing fields, unsupported event types, invalid quantities, and negative prices are rejected.
 
 ## Analytics
 
-`sql/analytics.sql` contains example queries for event counts, order-related amounts, top customers, and ingestion lag. Connect to the PostgreSQL container or run the SQL using a PostgreSQL client.
+`sql/analytics.sql` contains example queries for purchase revenue, sessions by event type, revenue by category, and daily active users.
 
 ## Reliability concepts
 
